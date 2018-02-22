@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<title>Boggle</title>
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/boggle.css">
+
+	<link rel="shortcut icon" href="img/icon.png">
+
+</head>
+<body>
+	<!--[if lt IE 7]>
+	<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+	<![endif]-->
+
+	<div id="prompt" class="name-prompt">
+		<div class="input-group">
+	      <input id="user-name" type="text" class="form-control" placeholder="Nom de joueur" autocomplete="off">
+	      <span class="input-group-btn">
+	        <input id="join" class="btn btn-primary" type="submit" value="Jouer au Boggle!">
+	      </span>
+	    </div>
+	</div>
+	
+	<!--div id="header" class="header">
+		<h1>Boggle</h1>
+	</div-->
+
+	<div id="content" class="content">
+		<div id="ranking" class="ranking">
+			<h2>Classement</h2>
+			
+			<ol id="leaderboard" class="leaderboard">
+				<!--li id="user-label-test"><div class="user-label">Test</div></li-->
+			</ol>
+		</div>
+		<div id="spacer1" class="spacer">
+		</div>
+		<div id="arena" class="arena">
+			<div class="timer-container">
+				<input id="timer" type="text" class="game-timer form-control" placeholder="0:00" autocomplete="off" disabled>
+			</div>
+			
+			<div id="game-grid-container" class="game-grid-container">
+				<table id="game-grid" class="game-grid">
+					<tr>
+						<td id="grid-item-1" class="game-grid-item">A</td>
+						<td id="grid-item-2" class="game-grid-item">B</td>
+						<td id="grid-item-3" class="game-grid-item">C</td>
+						<td id="grid-item-4" class="game-grid-item">D</td>
+					</tr>
+					<tr>
+						<td id="grid-item-5" class="game-grid-item">E</td>
+						<td id="grid-item-6" class="game-grid-item">F</td>
+						<td id="grid-item-7" class="game-grid-item">G</td>
+						<td id="grid-item-8" class="game-grid-item">H</td>
+					</tr>
+					<tr>
+						<td id="grid-item-9" class="game-grid-item">I</td>
+						<td id="grid-item-10" class="game-grid-item">J</td>
+						<td id="grid-item-11" class="game-grid-item">K</td>
+						<td id="grid-item-12" class="game-grid-item">L</td>
+					</tr>
+					<tr>
+						<td id="grid-item-13" class="game-grid-item">M</td>
+						<td id="grid-item-14" class="game-grid-item">N</td>
+						<td id="grid-item-15" class="game-grid-item">O</td>
+						<td id="grid-item-16" class="game-grid-item">P</td>
+					</tr>
+				</table>
+			</div>
+			
+			<div class="input-group wordform">
+			  <input id="word" type="text" class="form-control" placeholder="Entrez un mot" autocomplete="off">
+			  <span class="input-group-btn">
+				<input id="validate" class="btn btn-primary" type="submit" value="VALIDER">
+			  </span>
+			</div>
+			<div id="error-message" class="error-message"></div>		
+		</div>
+		<div id="spacer2" class="spacer">
+		</div>
+		<div id="scoreboard" class="score-board">
+			<h2>Mots Trouvés</h2>
+			<ul id="answerboard" class="answerboard"></ul>
+		</div>
+	</div>
+	
+	
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/socket.io.js"></script>
+	<script type="text/javascript" src="js/boggle.js"></script>
+	<script type="text/javascript" src="js/client.js"></script>
+
+	<script>
+		(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+			function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+		e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+		e.src='//www.google-analytics.com/analytics.js';
+		r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+		ga('create','UA-XXXXX-X');ga('send','pageview');
+	</script>
+</body>
+</html>

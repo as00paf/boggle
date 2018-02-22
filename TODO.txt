@@ -1,0 +1,8 @@
+TODO : 
+
+1. Export excel doc relevant column to file
+2. Figure out how word validation will work
+3. Return response when word is validated
+4. Add words to found words div with proper style
+5. Update score
+6. Show other players score
