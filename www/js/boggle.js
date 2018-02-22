@@ -104,7 +104,7 @@ Game.prototype = {
 		//Update game data
 		game.currentTime = serverData.currentTime;
 		game.isGameStarted = serverData.isGameStarted;
-		game.currentLetters = serverData.currentLetters;
+		game.currentLetters = generateLetterObjects(serverData.currentLetters);
 		
 		serverData.users.forEach( function(serverUser){
 			//Update local user stats
@@ -149,7 +149,6 @@ function findUnusedNeighbour(letter, usedLetters){
 
 function findAllWords(){
 	var possibleWords = [];
-	console.log("game.currentLetters : " + game.currentLetters);
 	
 	for(var i=0; i < 1/*game.currentLetters.length*/; i++){
 		var depth = 2;

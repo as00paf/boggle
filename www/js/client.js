@@ -110,7 +110,7 @@ function searchLetter ( nLetter ){
   var res = new Array();
   nLetter = nLetter.toUpperCase();
   for ( var i = 0; i < this.game.currentLetters.length; i++ ){
-	if ( this.game.currentLetters[i].letter == nLetter ){
+	if ( this.game.currentLetters[i] == nLetter ){
 		res.push(this.game.currentLetters[i]);
 	}
   }
@@ -122,6 +122,8 @@ function highlightLetters(word){
 	if ( ( word == null ) || ( word.length == 0 ) ){
 		//console.error("Word is null or empty");
 	}
+	
+	var objects = generateLetterObjects(this.game.currentLetters);
 	
 	for(var i = 0;i<this.game.currentLetters.length;i++){
 		this.game.currentLetters[i].isInCurrentWord = false;
