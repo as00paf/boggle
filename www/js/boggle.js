@@ -76,7 +76,7 @@ Game.prototype = {
 		}
 		
 		if(this.findAllWordsHasBeenCalled == false && game.currentLetters.length > 0){
-			//findAllWords();
+			findAllWords();
 			this.findAllWordsHasBeenCalled = true;
 		}
 	},
@@ -148,109 +148,52 @@ function findUnusedNeighbour(letter, usedLetters){
 }
 
 function findAllWords(){
+	console.clear();
 	var possibleWords = [];
 	
 	for(var i=0; i < 1/*game.currentLetters.length*/; i++){
-		var depth = 2;
+		var depth = 1;
 		var currentLetters = [];
 		var firstLetter = game.currentLetters[i];
-		console.log("firstLetter : " + firstLetter);
-		console.log("neighbours : " + firstLetter.neighbours);
-	
+		var paths = [[firstLetter]];
 		currentLetters = [firstLetter];
-		for(var j = 0; j < firstLetter.neighbours.length; j++){
-			var secondLetter = firstLetter.neighbours[j];
-			console.log("secondLetter : " + secondLetter);
-			console.log("secondLetter neighbours : " + secondLetter.neighbours);
+		
+		while(depth < game.currentLetters.length - 1){
+			paths[depth] = [];
 			
-			currentLetters = [firstLetter, secondLetter];
-			
-			for(var k = 0; k < secondLetter.neighbours.length; k++){
-				var thirdLetter = secondLetter.neighbours[k];
-				if(currentLetters.indexOf(thirdLetter) == -1){
-					//console.log("thirdLetter : " + thirdLetter);
-					
-					currentLetters[depth] = thirdLetter;
-					var currentWord = currentLetters.join().replace(/,/g, "");
-					if(possibleWords.indexOf(currentWord) == -1){
-						possibleWords.push(currentWord);
-						//console.log("Adding word : " + currentWord);
-					}
-					
-					depth = 3;
+			paths[depth - 1].forEach(function(path){
+				//console.log("path : " + path);
+				var isArray = Array.isArray(path);
+				if(isArray == false){
+					path.neighbours.forEach(function(neighbour){						
+						var newPath = [path, neighbour];
+						console.log("" + newPath);
+						paths[depth].push(newPath);
+					});
 				}else{
-					//console.log("letter " + thirdLetter + " is already used");
+					var lastLetter = path[path.length-1];
+					lastLetter.neighbours.forEach(function(neighbour){
+						if(path.indexOf(neighbour) == -1){
+							var newPath = path.slice();
+							newPath.push(neighbour);
+							if(paths[depth].indexOf(newPath) == -1){
+								paths[depth].push(newPath);
+								
+								if(newPath.length > 2){
+									console.log("" + newPath);
+									possibleWords.push(newPath);
+								}
+							}
+						}
+					});
 				}
-				
-				var currentLetter = thirdLetter;
-				while(depth < game.currentLetters.length){
-					var nextLetter = findUnusedNeighbour(currentLetter, currentLetters);
-					//console.log("depth : " + depth);
-					
-					if(nextLetter != null){
-						currentLetters[depth] = nextLetter;
-						//console.log("nextLetter : " + nextLetter);
-					}
-
-					var currentWord = currentLetters.join().replace(/,/g, "");
-					if(possibleWords.indexOf(currentWord) == -1){
-						possibleWords.push(currentWord);
-						//console.log("Adding word : " + currentWord);
-					}
-					
-					currentLetter = nextLetter;
-					depth ++;
-				}
-				
-				currentLetters = [firstLetter, secondLetter];
-				depth = 2;
-			}
-			
-			/*while(depth < game.currentLetters.length){
-				var nextLetter = findUnusedNeighbour(thirdLetter, currentLetters);
-				console.log("depth : " + depth);
-				
-				if(nextLetter != null){
-					currentLetters[depth] = nextLetter;
-					console.log("nextLetter : " + nextLetter);
-				}
-
-				if(currentLetters.length >= 3 && possibleWords.indexOf(currentLetters.join()) == -1){
-					possibleWords.push(currentLetters.join());
-				}
-				
-				depth ++;
-			}*/
-			
-			depth = 2;
-			firstLetter = currentLetters[0];
+			});
+			depth++;
 		}
-		
-		
-		
-		/*for(var j = 0; j < currentLetter.neighbours.length; j++){
-			var neighbour = currentLetter.neighbours[j];
-			console.log("neighbour : " + neighbour);
-		}
-	
-		while(depth < game.currentLetters.length){
-			currentLetters.push(currentLetter);
-			
-			if(currentLetters.length >= 3){
-				possibleWords.push(currentLetters.join());
-			}
-			
-			currentLetter = findUnusedNeighbour(currentLetter, currentLetters);
-			console.log("currentLetter : " + currentLetter);
-			depth ++;
-		}*/
 	}
 	
 	//Print results
-	console.log("possibleWords (" + possibleWords.length + ")");
-	for(var z=0;z<possibleWords.length;z++){
-		console.log(possibleWords[z]);
-	}
+	console.log("Found " + possibleWords.length + " possible words");
 	
 	this.game.possibleWords = possibleWords;
 }
