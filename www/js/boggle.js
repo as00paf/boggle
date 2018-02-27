@@ -76,7 +76,7 @@ Game.prototype = {
 		}
 		
 		if(this.findAllWordsHasBeenCalled == false && game.currentLetters.length > 0){
-			findAllWords();
+			//findAllWords();
 			this.findAllWordsHasBeenCalled = true;
 		}
 	},
@@ -223,34 +223,6 @@ User.prototype = {
 		//debug("Updating user score : " + this.name + ": " + this.id + " " + this.score + " pts")
 	
 		//$('#user-label-' + this.id).text('<div class="user-label">' + this.name + ' (' + this.score +' pts)</div>');
-	}
-}
-
-function Letter(index, letter, isInCurrentWord){
-	this.index = index;
-	this.letter = letter;
-	this.isInCurrentWord = isInCurrentWord;
-	this.neighbours = Array();
-}
-
-Letter.prototype = {
-	getNeighboursWithLetter:function(nLetter){
-		nLetter = nLetter.toUpperCase();
-		
-		var res = new Array();
-		for ( var i = 0; i < this.neighbours.length; i++ ){
-			if ( ( this.neighbours[i].letter == nLetter ) && !this.neighbours[i].isInCurrentWord ){
-				res.push ( this.neighbours[i] );
-			}	
-		}
-		
-		//console.log(res);
-		
-		return res;
-	},
-	
-	toString:function(){
-		return this.letter;
 	}
 }
 

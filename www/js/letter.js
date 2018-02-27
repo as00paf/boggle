@@ -25,5 +25,3 @@ Letter.prototype = {
 		return this.letter;
 	}
 }
-
-module.exports = Letter;

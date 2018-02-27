@@ -1,3 +1,8 @@
+const spawn = require('threads').spawn;
+const Pool = require('threads').Pool;
+
+const Letter = require('letter.js');
+
 var express = require('express');
 var searcher = require('find-in-files');
 var app = express();
@@ -25,6 +30,7 @@ function GameServer(){
 	this.letters = [];
 	this.currentTime = TIMER_COUNT;
 	this.isGameStarted = false;
+	
 	console.log('Game Server Initiated, waiting for players to start the game\n');
 }
 
