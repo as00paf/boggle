@@ -1,8 +1,8 @@
-const spawn = require('threads').spawn;
-const Pool = require('threads').Pool;
-
 const Letter = require('letter.js');
+const Dictionnary = require('dictionnary.js');
+const BoggleSolver = require('node-boggle-solver');
 
+var keypress = require('keypress');
 var express = require('express');
 var searcher = require('find-in-files');
 var app = express();
@@ -11,7 +11,7 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 180 * 10; //should be 3 minutes, increased to 30 minutes for debug purposes
+var TIMER_COUNT = 180; //3 minutes
 var INTERVAL = 1000; //1 second
 var RESET_TIMEOUT = 3000; //3 seconds
 
@@ -24,26 +24,69 @@ var server = app.listen(process.env.PORT || 80, function () {
 });
 
 var io = require('socket.io')(server);
+var isRestarting = false;
+
+// listen for the "keypress" event 
+keypress(process.stdin);
+process.stdin.on('keypress', function (ch, key) {
+  if(isRestarting == true){
+	  if(key.name == 'return'){
+		  return;
+	  }
+	  if(key.name == 'y'){
+		console.log("Restarting game");  
+		game.restartGame();
+	  }else{
+		  console.log("Restart cancelled");
+	  }
+	  
+	  isRestarting = false;
+  }
+  
+  if(key.name == 'r'){
+	  isRestarting = true;
+  }
+  
+  if (key && key.ctrl && key.name == 'c') {
+	process.stdin.pause();
+  }
+});
 
 function GameServer(){
 	this.users = [];
 	this.letters = [];
 	this.currentTime = TIMER_COUNT;
 	this.isGameStarted = false;
+	//this.solver = BoggleSolver();//TODO : Separate french and english
+	this.solver = BoggleSolver(new Dictionnary().words);//TODO : Separate french and english
+	this.currentWords = [];
 	
-	console.log('Game Server Initiated, waiting for players to start the game\n');
+	console.log('Game Server Initiated');
+	console.log('Starting Game\n');
 }
 
 GameServer.prototype = {
 	//Game
 	startGame: function(){		
+		var g = this;
 		this.currentTime = TIMER_COUNT;
-		//todo: remove
+		//Generate Letters
 		if(this.currentLetters == null || this.currentLetters == []){
 			this.currentLetters = genrateLetters();
 		} 
 		
-		var g = this;
+		//Solve Grid
+		var solveLetters = this.currentLetters.toString().replaceAll(",", "");
+		console.log("Solving grid for letters : " + solveLetters);
+		this.solver.solve(solveLetters, function(err, result) { 
+			console.log("Grid Solved");
+			console.log("Error : " + err);
+			
+			g.currentWords = result;
+			console.log("Has word 'are' : " + g.currentWords.hasWord("are"));
+		});
+		
+		//Start game 
 		this.currentLoop = setInterval(function(){
 			g.mainLoop();
 		}, INTERVAL);
@@ -68,7 +111,7 @@ GameServer.prototype = {
 		
 		//Reset values
 		this.currentTime = 0;
-		//this.currentLetters = [];
+		this.currentLetters = [];
 		this.isGameStarted = false;
 		this.users.forEach( function(user){
 			user.score = 0;
@@ -79,6 +122,10 @@ GameServer.prototype = {
 		this.resetLoop = setTimeout(function(){
 			g.startGame();
 		}, RESET_TIMEOUT);
+	},
+	
+	restartGame: function(){
+		console.log("Are you sure you want to restart the current game? Y/N");
 	},
 	
 	//Users
@@ -123,8 +170,8 @@ GameServer.prototype = {
 	
 	validateWord: function (client, word){
 		//console.log("Validating word "  + word + " with " + game.possibleWords.length + " possibilities");
-		
-		var result = {word: word, validated:true, points:5, score:10};
+		var validated = this.currentWords.hasWord(word);
+		var result = {word: word, validated:validated, points:5, score:10};
 		client.broadcast.emit('wordValidated', result);
 		client.emit('wordValidated', result);
 	}
@@ -139,8 +186,6 @@ function guid() {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
         s4() + '-' + s4() + s4() + s4();
 }
-
-var game = new GameServer();
 
 /* Connection events */
 
@@ -211,3 +256,11 @@ function shuffle(array) {
 
   return array;
 };
+
+String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+};
+
+var game = new GameServer();
+game.startGame();
