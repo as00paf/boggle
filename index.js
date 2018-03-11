@@ -71,9 +71,7 @@ GameServer.prototype = {
 		var g = this;
 		this.currentTime = TIMER_COUNT;
 		//Generate Letters
-		if(this.currentLetters == null || this.currentLetters == []){
-			this.currentLetters = genrateLetters();
-		} 
+		this.currentLetters = genrateLetters();
 		
 		//Solve Grid
 		var solveLetters = this.currentLetters.toString().replaceAll(",", "");
@@ -83,7 +81,6 @@ GameServer.prototype = {
 			console.log("Error : " + err);
 			
 			g.currentWords = result;
-			console.log("Has word 'are' : " + g.currentWords.hasWord("are"));
 		});
 		
 		//Start game 
@@ -132,9 +129,6 @@ GameServer.prototype = {
 	addUser: function(user){
 		this.users.push(user);
 		console.log(user.name + ' joined the game');
-		if(this.isGameStarted == false){
-			this.startGame();	
-		}
 	},
 
 	removeUser: function(userId){
@@ -143,11 +137,22 @@ GameServer.prototype = {
 		this.users = this.users.filter( function(user){return user.id != userId} );
 	},
 
+	findUserById: function(userId){
+		for(var i=0;i<this.users.length;i++){			
+			var user = this.users[i];
+			if(user.id == userId){
+				return user;
+			}
+		}
+		return null;
+	},
+	
 	//Sync user with new data received from a client
 	syncUser: function(newUserData){
 		this.users.forEach( function(user){
 			if(user.id == newUserData.id){
-				user.score = newUserData.score;
+				//TODO : fixme
+				//user.score = newUserData.score;
 			}
 		});
 	},
@@ -168,12 +173,43 @@ GameServer.prototype = {
 		return gameData;
 	},
 	
-	validateWord: function (client, word){
+	validateWord: function (client, userId, word){
 		//console.log("Validating word "  + word + " with " + game.possibleWords.length + " possibilities");
+		var user = this.findUserById(userId);
+		if(user == null){
+			console.log("User not found with id " + clientId);
+			return null;
+		}
+		
 		var validated = this.currentWords.hasWord(word);
-		var result = {word: word, validated:validated, points:5, score:10};
+		var points = 0;
+		if(validated == true){
+			points = this.calculatePoints(word);
+			user.score += points;
+		}
+		var result = {word: word, validated:validated, points:points, score:user.score};
 		client.broadcast.emit('wordValidated', result);
 		client.emit('wordValidated', result);
+	},
+	
+	calculatePoints: function(word){
+		if(word == null || word.length < 3) return 0;
+		var points = 11;
+		switch(word.length){
+			case 3:
+			case 4:
+				points = 1;
+				break;
+			case 5:
+			case 6:
+				points = 3;
+				break;
+			case 7:
+				points = 5;
+				break;
+		}
+		
+		return points
 	}
 }
 
@@ -194,9 +230,9 @@ io.on('connection', function(client) {
 		var userId = guid();
 
 		client.emit('addUser', { id: userId, name: user.name, isLocal: true});
-		client.broadcast.emit('addUser', { id: userId, name: user.name, isLocal: false} );
+		client.broadcast.emit('addUser', { id: userId, name: user.name, isLocal: false, score: 0} );
 
-		game.addUser({ id: userId, name: user.name});
+		game.addUser({ id: userId, name: user.name, score:0});
 	});
 
 	client.on('sync', function(data){
@@ -213,7 +249,7 @@ io.on('connection', function(client) {
 	});
 
 	client.on('validateWord', function(data){
-		game.validateWord(client, data.word);
+		game.validateWord(client, data.userId, data.word);
 	});
 
 	client.on('leaveGame', function(userId){

@@ -16,6 +16,7 @@ socket.on('addUser', function(user){
 	game.addUser(user.id, user.name, user.isLocal);
 	if(user.isLocal == true){
 		userId = user.id;
+		
 	}
 });
 
@@ -28,7 +29,8 @@ socket.on('removeUser', function(userId){
 });
 
 socket.on('wordValidated', function(data){
-	console.log("word validated : " + data.word + " " + data.validated);
+	console.log("word validated : " + data.word + " " + data.validated + ", score : " + data.score);
+	game.localUser.score = data.score;
 });
 
 $(document).ready( function(){
@@ -154,7 +156,6 @@ function highlightLetters(word){
 	}
 
 	if ( currentLetterIndex <= 0 ){
-		console.error("Could not find a valid path");
 		usedLetters = [];
 	}else{
 		var sRes = new Array();
