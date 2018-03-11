@@ -35,6 +35,7 @@ Game.prototype = {
 		var user = new User(id, name, this.$arena, this, isLocal);
 		if(isLocal){
 			this.localUser = user;
+			this.startGame();
 		}else{
 			this.users.push(user);
 		}
@@ -86,7 +87,7 @@ Game.prototype = {
 	},
 
 	receiveData: function(serverData){
-		//debug("Received Server Data ! " + serverData);
+		//debug("Received Server Data ! State : " + serverData.state);
 		//debug(serverData)
 		var game = this;
 
@@ -94,17 +95,41 @@ Game.prototype = {
 		game.currentTime = serverData.currentTime;
 		game.isGameStarted = serverData.isGameStarted;
 		
-		if(game.currentLetters.length == 0){
-			game.currentLetters = generateLetterObjects(serverData.currentLetters);
+		//Update game state
+		var newState = serverData.state;
 		
-			//Adding Letters to grid
-			console.log("Adding letters to grid : " + this.currentLetters);
-			for(var i = 0; i<this.currentLetters.length;i++){
-				var id = "#grid-item-" + (i+1); 
-				$(id).text(this.currentLetters[i]);
+		if(game.state != newState){
+			console.log("New state : " + newState);
+			switch(newState){
+				case "STARTED":
+					this.addLettersToGrid(serverData);
+					break;
+				case "RESTARTING":
+					//this.showWaitPopup();
+					break;
+				case "ENDED":
+					//this.showEndedPopup();
+					//this.showResults();
+					break;
 			}
+		}else{
+			this.updateScores(serverData);
 		}
+		game.state = newState;
+	},
+	
+	addLettersToGrid: function(serverData){
+		game.currentLetters = generateLetterObjects(serverData.currentLetters);
 		
+		//Adding Letters to grid
+		console.log("Adding letters to grid : " + this.currentLetters);
+		for(var i = 0; i<this.currentLetters.length;i++){
+			var id = "#grid-item-" + (i+1); 
+			$(id).text(this.currentLetters[i]);
+		}
+	},
+	
+	updateScores: function(serverData){
 		serverData.users.forEach( function(serverUser){
 			//Update local user stats
 			if(game.localUser !== undefined && serverUser.id == game.localUser.id){

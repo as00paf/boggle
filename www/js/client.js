@@ -16,7 +16,6 @@ socket.on('addUser', function(user){
 	game.addUser(user.id, user.name, user.isLocal);
 	if(user.isLocal == true){
 		userId = user.id;
-		
 	}
 });
 

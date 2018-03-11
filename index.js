@@ -2,7 +2,6 @@ const Letter = require('letter.js');
 const Dictionnary = require('dictionnary.js');
 const BoggleSolver = require('node-boggle-solver');
 
-var keypress = require('keypress');
 var express = require('express');
 var searcher = require('find-in-files');
 var app = express();
@@ -11,9 +10,10 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 180; //3 minutes
+var TIMER_COUNT = 15;//180; //3 minutes
 var INTERVAL = 1000; //1 second
-var RESET_TIMEOUT = 3000; //3 seconds
+var RESET_TIMEOUT = 5000; //3 seconds
+var END_TIMEOUT = 3000; //3 seconds
 
 //Static resources server
 app.use(express.static(__dirname + '/www'));
@@ -24,35 +24,9 @@ var server = app.listen(process.env.PORT || 80, function () {
 });
 
 var io = require('socket.io')(server);
-var isRestarting = false;
-
-// listen for the "keypress" event 
-keypress(process.stdin);
-process.stdin.on('keypress', function (ch, key) {
-  if(isRestarting == true){
-	  if(key.name == 'return'){
-		  return;
-	  }
-	  if(key.name == 'y'){
-		console.log("Restarting game");  
-		game.restartGame();
-	  }else{
-		  console.log("Restart cancelled");
-	  }
-	  
-	  isRestarting = false;
-  }
-  
-  if(key.name == 'r'){
-	  isRestarting = true;
-  }
-  
-  if (key && key.ctrl && key.name == 'c') {
-	process.stdin.pause();
-  }
-});
 
 function GameServer(){
+	this.gameState = "INIT";
 	this.users = [];
 	this.letters = [];
 	this.currentTime = TIMER_COUNT;
@@ -61,15 +35,16 @@ function GameServer(){
 	this.solver = BoggleSolver(new Dictionnary().words);//TODO : Separate french and english
 	this.currentWords = [];
 	
-	console.log('Game Server Initiated');
-	console.log('Starting Game\n');
+	console.log('Game Server Initiated\n');
 }
 
 GameServer.prototype = {
 	//Game
-	startGame: function(){		
+	startGame: function(){
+		console.log('Initiating Game');
 		var g = this;
 		this.currentTime = TIMER_COUNT;
+		
 		//Generate Letters
 		this.currentLetters = genrateLetters();
 		
@@ -78,34 +53,65 @@ GameServer.prototype = {
 		console.log("Solving grid for letters : " + solveLetters);
 		this.solver.solve(solveLetters, function(err, result) { 
 			console.log("Grid Solved");
-			console.log("Error : " + err);
+			if(err != null){
+				console.log("Error : " + err);	
+			}
 			
 			g.currentWords = result;
-		});
 		
-		//Start game 
-		this.currentLoop = setInterval(function(){
-			g.mainLoop();
-		}, INTERVAL);
-		this.isGameStarted = true;
-		console.log("Game started")
+			//Start Game
+			console.log('Starting Game');		
+			//Send data to all users
+			g.changeGameState("STARTED");
+			
+			//Start game 
+			g.currentLoop = setInterval(function(){
+				g.mainLoop();
+			}, INTERVAL);
+			this.isGameStarted = true;
+			console.log("Game started")
+		});		
 	},
 	
 	mainLoop: function(){
-		this.currentTime--;
-		
-		//End game
-		if(this.currentTime <= 0){
-			this.endGame()
+		if(this.currentTime == 0){//End game
+			this.endGame();
+			return;
 		}
+		
+		this.currentTime--;	
+	},
+	
+	changeGameState: function(newState){
+		this.gameState = newState;
+		//client.emit('changeGameState', {state: this.gameState});
+		//client.broadcast.emit('changeGameState', {state: this.gameState} );
 	},
 
 	endGame: function(){
+		console.log("Game ended, starting a new one in " + RESET_TIMEOUT/1000 + " seconds");
 		//Stop loop
-		clearInterval(this.currentLoop)
+		clearInterval(this.currentLoop);
 		
 		//Calculate winner
 		
+		//Send data to all users
+		this.changeGameState("ENDED");
+		
+		//Restart Game
+		var g = this;
+		this.currentTime = RESET_TIMEOUT/1000;
+		this.resetLoop = setInterval(function(){
+			if(g.currentTime == 0){
+				g.restartGame();
+				clearInterval(g.resetLoop);
+			}else{
+				g.currentTime--;
+			}
+		}, INTERVAL);
+	},
+	
+	restartGame: function(){
 		//Reset values
 		this.currentTime = 0;
 		this.currentLetters = [];
@@ -114,15 +120,13 @@ GameServer.prototype = {
 			user.score = 0;
 		});
 		
-		console.log("Game ended, starting a new one in " + RESET_TIMEOUT/1000 + " seconds")
+		//Send data to all users
+		this.changeGameState("RESTARTING");
+		
 		var g = this;
-		this.resetLoop = setTimeout(function(){
+		setTimeout(function(){
 			g.startGame();
-		}, RESET_TIMEOUT);
-	},
-	
-	restartGame: function(){
-		console.log("Are you sure you want to restart the current game? Y/N");
+		}, END_TIMEOUT);
 	},
 	
 	//Users
@@ -157,18 +161,13 @@ GameServer.prototype = {
 		});
 	},
 
-	//Check if word matches
-	matchWord: function(word){
-		var self = this;
-		//TODO : match word against dictionary
-	},
-
 	getData: function(){
 		var gameData = {};
 		gameData.isGameStarted = this.isGameStarted;
 		gameData.users = this.users;
 		gameData.currentTime = this.currentTime;
 		gameData.currentLetters = this.currentLetters;
+		gameData.state = this.gameState;
 
 		return gameData;
 	},
@@ -229,7 +228,7 @@ io.on('connection', function(client) {
 	client.on('joinGame', function(user){
 		var userId = guid();
 
-		client.emit('addUser', { id: userId, name: user.name, isLocal: true});
+		client.emit('addUser', { id: userId, name: user.name, isLocal: true, score: 0, gameData:game.getData()});
 		client.broadcast.emit('addUser', { id: userId, name: user.name, isLocal: false, score: 0} );
 
 		game.addUser({ id: userId, name: user.name, score:0});
