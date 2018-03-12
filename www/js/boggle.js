@@ -13,6 +13,7 @@ function Game(arenaId, w, h, socket){
 	this.currentLetters = [];
 	this.possibleWords = [];
 	this.triedWords = [];
+	this.foundWords = [];
 	
 	var g = this;
 	g.startGame();
@@ -144,18 +145,14 @@ Game.prototype = {
 				case "STARTED":
 					this.addLettersToGrid(serverData);
 					$("#word").prop("disabled",false);
+					$("#wordboard").append('<ul id="answerboard" class="answerboard"></ul>');
 					//$('#word').focus();
 					break;
 				case "ENDED":
-					$("#word").prop("disabled",true);
-					//this.showEndedPopup();
-					//this.showResults();
+					this.onGameEnded(serverData);
 					break;
 				case "RESTARTING":
-					//Clear Answerboard
-					$("#answerboard").html("");
-					
-					//this.showWaitPopup();
+					this.onGameRestarting(serverData);
 					break;
 			}
 		}else{
@@ -176,6 +173,7 @@ Game.prototype = {
 	},
 	
 	updateScores: function(serverData){
+		if(this.currentTime % 5 == 0) return;
 		//Update scores
 		serverData.users.forEach( function(serverUser){
 			//Update local user stats
@@ -208,11 +206,13 @@ Game.prototype = {
 	},
 	
 	sortUsersByScore: function(a, b){
-		var aId = a.id.replace("user-label-", "");
-		var playerA = game.findUserById(aId);
+		var aId = a.id;
+		var playerA = game.findUserById(aId.replace("user-label-", ""));
 		
-		var bId = b.id.replace("user-label-", "");
-		var playerB = game.findUserById(bId);
+		var bId = b.id;
+		var playerB = game.findUserById(bId.replace("user-label-", ""));
+		
+		if(playerA == null || playerB == null) return 0;
 
 		if(playerB.score < playerA.score) return -1;    
 		if(playerB.score > playerA.score) return 1;    
@@ -220,12 +220,14 @@ Game.prototype = {
 	},
 	
 	sortUsersByName: function(a, b){
-		var aId = a.id.replace("user-label-", "");
-		var playerA = game.findUserById(aId);
+		var aId = a.id;
+		var playerA = game.findUserById(aId.replace("user-label-", ""));
 		
-		var bId = b.id.replace("user-label-", "");
-		var playerB = game.findUserById(bId);
+		var bId = b.id;
+		var playerB = game.findUserById(bId.replace("user-label-", ""));
 
+		if(playerA == null || playerB == null) return 0;
+		
 		if(a.name < b.name) return -1;
 		if(a.name > b.name) return 1;
 		return 0;		
@@ -249,26 +251,59 @@ Game.prototype = {
 			divClass += " wrong-word-label";
 			suffix = ' (' + reason +')';
 			$('#error-message').text(reason);
+		}else{
+			if(this.foundWords.indexOf(word) == -1){
+				this.foundWords.push(word);
+			}
 		}
 		$("#answerboard").append('<li><div class="' + divClass + '">' + word + suffix + '</div></li>');
 		this.triedWords.push(word);
-	}
-}
-
-function findUnusedNeighbour(letter, usedLetters){
-	if(letter == null) return null;
+	},
 	
-	var neighbour = null;
-	//console.log("Finding unused neighbour for " + letter);
-	for(var i = 0; i < letter.neighbours.length; i++){
-		neighbour = letter.neighbours[i];
-		if(usedLetters.indexOf(neighbour) == -1){
-			//console.log("Found unused neighbour : " + neighbour);
-			return neighbour;
+	//States
+	onGameEnded: function(serverData){
+		//Disable text field
+		$("#word").prop("disabled",true);
+		
+		//Update found words with all grid possibilities
+		//console.log("All words : " + serverData.allWords.toString());
+		
+		$("#wordboard").html('');
+		
+		var unfoundWords = [];
+		
+		for(var i=0;i<serverData.allWords.length;i++){
+			var word = serverData.allWords[i];
+			var divClass = "found-word-label";
+			
+			if(this.foundWords.indexOf(word) == -1){
+				divClass += " unfound-unword-label";
+			}
+			
+			if(serverData.userFoundWords.indexOf(word) == -1){
+				divClass += "notfound-unword-label";
+			}
+			
+			var text = word;
+			if(i != serverData.allWords.length - 1){
+				text += ", ";
+			}
+			$("#wordboard").append('<span class="' + divClass + '">' + text + '</span>');
 		}
-	}
+		
+		//this.showEndedPopup();
+	},
 	
-	return neighbour;
+	onGameRestarting: function(serverData){
+		//Clear Wordboard
+		$("#wordboard").html("");
+		
+		this.possibleWords = [];
+		this.triedWords = [];
+		this.foundWords = [];
+		
+		//this.showWaitPopup();
+	}
 }
 
 function User(id, name, $arena, game, isLocal){
@@ -292,7 +327,7 @@ User.prototype = {
 			divClass += " local-user-label";
 			console.log("isLocal " + this.name);
 		}
-		$('#leaderboard').append('<li id="user-label-' + this.id +'"><div class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</div></li>');
+		$('#leaderboard').append('<li id="user-label-' + this.id +'" class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</li>');
 		this.game.refreshUI();
 	},
 

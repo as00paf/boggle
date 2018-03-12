@@ -1,10 +1,6 @@
 TODO : 
 
-1. Change found words when state is ended
-2. Make found words highlight on grid on hover
-3. Send diffent data depending on state
-	- All possible words on ended
-	
+1. Make found words highlight on grid on hover	
 4. Add session handling
-5. Sort leaderboard
+5. Sort leaderboard + Show positions
 6. Manage scrollbars

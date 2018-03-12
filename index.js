@@ -10,9 +10,9 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 45;//180; //3 minutes
+var TIMER_COUNT = 15;//180; //3 minutes
 var INTERVAL = 1000; //1 second
-var RESET_TIMEOUT = 5000; //3 seconds
+var RESET_TIMEOUT = 60000; //60 seconds
 var END_TIMEOUT = 3000; //3 seconds
 
 //Static resources server
@@ -34,6 +34,7 @@ function GameServer(){
 	//this.solver = BoggleSolver();//TODO : Separate french and english
 	this.solver = BoggleSolver(new Dictionnary().words);//TODO : Separate french and english
 	this.currentWords = [];
+	this.userFoundWords = [];
 	
 	console.log('Game Server Initiated\n');
 }
@@ -84,8 +85,6 @@ GameServer.prototype = {
 	
 	changeGameState: function(newState){
 		this.gameState = newState;
-		//client.emit('changeGameState', {state: this.gameState});
-		//client.broadcast.emit('changeGameState', {state: this.gameState} );
 	},
 
 	endGame: function(){
@@ -115,6 +114,7 @@ GameServer.prototype = {
 		//Reset values
 		this.currentTime = 0;
 		this.currentLetters = [];
+		this.userFoundWords = [];
 		this.isGameStarted = false;
 		this.users.forEach( function(user){
 			user.score = 0;
@@ -168,6 +168,11 @@ GameServer.prototype = {
 		gameData.currentTime = this.currentTime;
 		gameData.currentLetters = this.currentLetters;
 		gameData.state = this.gameState;
+		
+		if(this.gameState == "ENDED"){
+			gameData.allWords = this.currentWords.list;
+			gameData.userFoundWords = this.userFoundWords;
+		}
 
 		return gameData;
 	},
@@ -186,6 +191,9 @@ GameServer.prototype = {
 		if(validated == true){
 			points = this.calculatePoints(word);
 			user.score += points;
+			if(this.userFoundWords.indexOf(word) == -1){
+				this.userFoundWords.push(word);
+			}
 		}else{
 			reason = "Not in dictionnary";
 		}

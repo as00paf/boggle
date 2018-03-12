@@ -26,9 +26,8 @@ h1 {
 }
 
 .content{
+	height: 100%;
 	margin: 16px;
-	white-space: nowrap;
-	white-space-collapse: discard; 
 	font-size: 0;
 	display: flex;
 }
@@ -36,8 +35,6 @@ h1 {
 .ranking{
 	width: 20%;
 	background-color: white;
-	pointer-events: none;
-    display: inline-block;
 	position: relative;
 	float: left;
 }
@@ -49,7 +46,6 @@ h1 {
 .user-label{
 	font-size: 14px;	
 	color: #5e5e5e;
-	display: inline-block;
 }
 
 .local-user-label{
@@ -132,9 +128,17 @@ h1 {
 	width: 20%;
 	background-color: white;
 	pointer-events: none;
-    display: inline-block;
 	position: relative;
 	float: right;
+}
+
+.wordboard {
+	height: auto;
+	padding : 10px;
+	background: cyan;
+}
+
+.answerboard{
 }
 
 .word-label{
@@ -147,3 +151,16 @@ h1 {
 	text-decoration: line-through;
 	color: #666666;
 }
+
+.found-word-label{
+	font-size: 14px;
+	color: #999666;
+}
+
+.unfound-word-label{
+	color: #666666;	
+}
+
+.notfound-word-label{
+	color: #333333;	
+}	
