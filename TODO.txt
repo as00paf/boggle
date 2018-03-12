@@ -1,9 +1,10 @@
 TODO : 
 
-1. Sort leaderboard
-2. Make users join game and clear serverUsers so leaderboard is always up to date
-3. Hide error messages
-4. Enable/Disable and focus text field by state
-5. Manage scrollbars
-6. Change found words when state is ended
-7. Add session handling
+1. Change found words when state is ended
+2. Make found words highlight on grid on hover
+3. Send diffent data depending on state
+	- All possible words on ended
+	
+4. Add session handling
+5. Sort leaderboard
+6. Manage scrollbars

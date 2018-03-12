@@ -32,6 +32,36 @@ Game.prototype = {
 		this.currentTime = 0;
 	},
 
+	joinGame: function(socket){
+		$('#word').focus();
+		var g = this;
+		$('#word').keyup( function(e){
+			var typedLetters = $('#word').val();
+			var k = e.keyCode || e.which;
+			
+			switch(k){
+				case 13://enter
+					validateWord(typedLetters, socket);
+					$('#word').val("");
+					$('#word').focus("");
+					usedLetters = [];
+					g.refreshUI();
+					break;
+				case e.altKey:
+					e.preventDefault();
+					e.stopPropagation();
+					break;
+				default:
+					highlightLetters(typedLetters);
+					break;
+			}
+			
+			if(k > 65 || k < 90){
+				//highlightLetters(typedLetters);
+			}			
+		});
+	},
+
 	addUser: function(id, name, isLocal){
 		var user = new User(id, name, this.$arena, this, isLocal);
 		if(isLocal){
@@ -59,6 +89,7 @@ Game.prototype = {
 	},
 	
 	refreshUI: function(){	
+		//Timer
 		var minutes = Math.floor(this.currentTime/60);
 		var seconds = this.currentTime % 60;
 		if(seconds < 10){
@@ -67,9 +98,18 @@ Game.prototype = {
 		var time = minutes + ":" + seconds;
 		//debug("Current time is : " + time + " or " + this.currentTime)
 		
-		//Timer
 		this.$arena.find('.game-timer').val(time);
-		
+	
+		//Highlight Letters
+		for(var i = 0; i < this.currentLetters.length;i++){
+			var itemId = "#grid-item-" + (i + 1);
+			var letter = this.currentLetters[i];
+			if(usedLetters.indexOf(letter) > -1){
+				$(itemId).css("background-color", "blue");
+			}else{
+				$(itemId).css("background-color", "#white");
+			}
+		}
 	},
 	
 	sendData: function(){
@@ -103,8 +143,11 @@ Game.prototype = {
 			switch(newState){
 				case "STARTED":
 					this.addLettersToGrid(serverData);
+					$("#word").prop("disabled",false);
+					//$('#word').focus();
 					break;
 				case "ENDED":
+					$("#word").prop("disabled",true);
 					//this.showEndedPopup();
 					//this.showResults();
 					break;
@@ -308,6 +351,93 @@ function getNeighboursForItemAt	(letters, index){
 
 	return result;
 }
+
+
+function validateWord(word, socket){
+	//Reset error message
+	$('#error-message').text("");
+	
+	if(usedLetters.length > 0){
+		if(word.length >= 3){
+			if(game.triedWords.indexOf(word) == -1){
+				//Send validation
+				socket.emit('validateWord', {word : word, userId: userId});
+			}else{
+				game.wordValidated(word, false, 0, "Already tried " + word);
+			}
+		}else{
+			game.wordValidated(word, false, 0, word + " is too small");
+		}
+	}else{
+		game.wordValidated(word, false, 0, word + " not on grid");
+	}
+}
+
+function searchLetter ( nLetter ){
+  var res = new Array();
+  nLetter = nLetter.toUpperCase();
+  for ( var i = 0; i < this.game.currentLetters.length; i++ ){
+	if ( this.game.currentLetters[i] == nLetter ){
+		res.push(this.game.currentLetters[i]);
+	}
+  }
+    
+  return res;
+}
+
+function highlightLetters(word){
+	$('#error-message').text("");
+	
+	if ( ( word == null ) || ( word.length == 0 ) ){
+		//console.error("Word is null or empty");
+	}
+	
+	var objects = generateLetterObjects(this.game.currentLetters);
+	
+	for(var i = 0;i<this.game.currentLetters.length;i++){
+		this.game.currentLetters[i].isInCurrentWord = false;
+	}
+	
+	usedLetters = [];
+	
+	var currentRes         = new Array();
+	var currentLetterIndex = 0;
+	currentRes[0] = this.searchLetter ( word.substring(0,1) );
+
+	while((currentLetterIndex >= 0) && (currentLetterIndex < word.length)){
+		if(currentRes[currentLetterIndex].length > 0){
+		  var currentCase = currentRes[currentLetterIndex][0];
+		  //console.log("currentCase : " + currentCase);
+		  currentCase.isInCurrentWord = true;
+		  currentLetterIndex++;
+		  if ( currentLetterIndex < word.length ){
+			currentRes[currentLetterIndex] = currentCase.getNeighboursWithLetter(word.substring(currentLetterIndex,currentLetterIndex+1));  
+		  }
+		}else{  
+		  currentLetterIndex--;
+		  if ( currentLetterIndex >= 0 ){
+			currentRes[currentLetterIndex][0].isInCurrentWord = false;
+			currentRes[currentLetterIndex].shift();
+		  }
+		}
+	}
+
+	if ( currentLetterIndex <= 0 ){
+		usedLetters = [];
+	}else{
+		var sRes = new Array();
+		for ( i = 0; i < currentRes.length; i++ ){
+			sRes[i] = currentRes[i][0];
+		}
+		
+		usedLetters = sRes;
+		//console.log("New letters : " + usedLetters);
+	}
+
+	//Add to used letters
+	game.refreshUI();
+}
+
 
 function debug(msg){
 	if(DEBUG){
