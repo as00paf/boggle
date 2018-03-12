@@ -12,6 +12,7 @@ function Game(arenaId, w, h, socket){
 	this.currentTime = 180;
 	this.currentLetters = [];
 	this.possibleWords = [];
+	this.triedWords = [];
 	
 	var g = this;
 	g.startGame();
@@ -36,9 +37,9 @@ Game.prototype = {
 		if(isLocal){
 			this.localUser = user;
 			this.startGame();
-		}else{
-			this.users.push(user);
 		}
+		
+		this.users.push(user);
 	},
 
 	removeUser: function(userId){
@@ -99,17 +100,19 @@ Game.prototype = {
 		var newState = serverData.state;
 		
 		if(game.state != newState){
-			console.log("New state : " + newState);
 			switch(newState){
 				case "STARTED":
 					this.addLettersToGrid(serverData);
 					break;
-				case "RESTARTING":
-					//this.showWaitPopup();
-					break;
 				case "ENDED":
 					//this.showEndedPopup();
 					//this.showResults();
+					break;
+				case "RESTARTING":
+					//Clear Answerboard
+					$("#answerboard").html("");
+					
+					//this.showWaitPopup();
 					break;
 			}
 		}else{
@@ -122,7 +125,7 @@ Game.prototype = {
 		game.currentLetters = generateLetterObjects(serverData.currentLetters);
 		
 		//Adding Letters to grid
-		console.log("Adding letters to grid : " + this.currentLetters);
+		//console.log("Adding letters to grid : " + this.currentLetters);
 		for(var i = 0; i<this.currentLetters.length;i++){
 			var id = "#grid-item-" + (i+1); 
 			$(id).text(this.currentLetters[i]);
@@ -130,6 +133,7 @@ Game.prototype = {
 	},
 	
 	updateScores: function(serverData){
+		//Update scores
 		serverData.users.forEach( function(serverUser){
 			//Update local user stats
 			if(game.localUser !== undefined && serverUser.id == game.localUser.id){
@@ -153,6 +157,58 @@ Game.prototype = {
 				game.addUser(serverUser.id, serverUser.name, false);
 			}
 		});
+		
+		//Sort leaderboard
+		$(".leaderboard li")/*.sort(this.sortUsersByName)*/
+							.sort(this.sortUsersByScore)
+							.appendTo('.leaderboard');
+	},
+	
+	sortUsersByScore: function(a, b){
+		var aId = a.id.replace("user-label-", "");
+		var playerA = game.findUserById(aId);
+		
+		var bId = b.id.replace("user-label-", "");
+		var playerB = game.findUserById(bId);
+
+		if(playerB.score < playerA.score) return -1;    
+		if(playerB.score > playerA.score) return 1;    
+		return 0;    
+	},
+	
+	sortUsersByName: function(a, b){
+		var aId = a.id.replace("user-label-", "");
+		var playerA = game.findUserById(aId);
+		
+		var bId = b.id.replace("user-label-", "");
+		var playerB = game.findUserById(bId);
+
+		if(a.name < b.name) return -1;
+		if(a.name > b.name) return 1;
+		return 0;		
+	},
+	
+	findUserById: function(userId){
+		for(var i=0;i<game.users.length;i++){			
+			var user = game.users[i];
+			if(user.id == userId){
+				return user;
+			}
+		}
+		return null;
+	},
+	
+	wordValidated: function(word, isValid, points, reason){
+		//console.log("Word validated : " + word + " " + isValid + " points : " + points + " " + reason);
+		var divClass = "word-label";
+		var suffix = ' (' + points +' pts)';
+		if(isValid == false){
+			divClass += " wrong-word-label";
+			suffix = ' (' + reason +')';
+			$('#error-message').text(reason);
+		}
+		$("#answerboard").append('<li><div class="' + divClass + '">' + word + suffix + '</div></li>');
+		this.triedWords.push(word);
 	}
 }
 
@@ -187,8 +243,13 @@ User.prototype = {
 
 	materialize: function(){
 		debug("Adding user to list : " + this.name);
-		//TODO : add bold if user.isLocal == true
-		$('#leaderboard').append('<li id="user-label-' + this.id +'"><div class="user-label">' + this.name + ' (' + this.score +' pts)</div></li>');
+		
+		var divClass = "user-label";
+		if(this.isLocal == true){
+			divClass += " local-user-label";
+			console.log("isLocal " + this.name);
+		}
+		$('#leaderboard').append('<li id="user-label-' + this.id +'"><div class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</div></li>');
 		this.game.refreshUI();
 	},
 
@@ -196,8 +257,12 @@ User.prototype = {
 		//TODO : Update score
 		//debug("Updating user score : " + this.toString());
 		//debug('<div class="user-label">' + this.name + ' (' + this.score +' pts)</div>');
-				
-		$('#user-label-' + this.id).html('<div class="user-label">' + this.name + ' (' + this.score +' pts)</div>');	
+		var divClass = "user-label";
+		if(this.isLocal == true){
+			divClass += " local-user-label";
+		}
+		
+		$('#user-label-' + this.id).html('<div class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</div>');	
 	},
 	
 	toString: function(){

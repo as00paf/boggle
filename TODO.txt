@@ -1,8 +1,9 @@
 TODO : 
 
-1. Export excel doc relevant column to file
-2. Figure out how word validation will work
-3. Return response when word is validated
-4. Add words to found words div with proper style
-5. Update score
-6. Show other players score
+1. Sort leaderboard
+2. Make users join game and clear serverUsers so leaderboard is always up to date
+3. Hide error messages
+4. Enable/Disable and focus text field by state
+5. Manage scrollbars
+6. Change found words when state is ended
+7. Add session handling

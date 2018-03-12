@@ -28,8 +28,9 @@ socket.on('removeUser', function(userId){
 });
 
 socket.on('wordValidated', function(data){
-	console.log("word validated : " + data.word + " " + data.validated + ", score : " + data.score);
+	//console.log("word validated : " + data.word + " " + data.validated + ", score : " + data.score);
 	game.localUser.score = data.score;
+	game.wordValidated(data.word, data.validated, data.points, data.reason);
 });
 
 $(document).ready( function(){
@@ -62,6 +63,7 @@ $(window).on('beforeunload', function(){
 });
 
 $(window).on('unload', function(){
+	console.log("leaveGame : " + userId);
 	socket.emit('leaveGame', userId);
 });
 
@@ -103,8 +105,20 @@ function validateWord(word, socket){
 	//Reset error message
 	$('#error-message').text("");
 	
-	//Send validation
-	socket.emit('validateWord', {word : word, userId: userId});
+	if(usedLetters.length > 0){
+		if(word.length >= 3){
+			if(game.triedWords.indexOf(word) == -1){
+				//Send validation
+				socket.emit('validateWord', {word : word, userId: userId});
+			}else{
+				game.wordValidated(word, false, 0, "Already tried " + word);
+			}
+		}else{
+			game.wordValidated(word, false, 0, word + " is too small");
+		}
+	}else{
+		game.wordValidated(word, false, 0, word + " not on grid");
+	}
 }
 
 function searchLetter ( nLetter ){

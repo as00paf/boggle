@@ -10,7 +10,7 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 15;//180; //3 minutes
+var TIMER_COUNT = 45;//180; //3 minutes
 var INTERVAL = 1000; //1 second
 var RESET_TIMEOUT = 5000; //3 seconds
 var END_TIMEOUT = 3000; //3 seconds
@@ -180,14 +180,16 @@ GameServer.prototype = {
 			return null;
 		}
 		
+		var reason = "Good";
 		var validated = this.currentWords.hasWord(word);
 		var points = 0;
 		if(validated == true){
 			points = this.calculatePoints(word);
 			user.score += points;
+		}else{
+			reason = "Not in dictionnary";
 		}
-		var result = {word: word, validated:validated, points:points, score:user.score};
-		client.broadcast.emit('wordValidated', result);
+		var result = {word: word, validated:validated, points:points, score:user.score, reason: reason};
 		client.emit('wordValidated', result);
 	},
 	
