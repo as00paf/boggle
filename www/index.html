@@ -34,21 +34,31 @@
 		<h1>Boggle</h1>
 	</div-->
 
+	<!-- Content -->
 	<div id="content" class="content">
+	
+		<!-- Ranking -->
 		<div id="ranking" class="ranking">
 			<h2>Classement</h2>
 			
+			<!-- Leaderboard -->
 			<ol id="leaderboard" class="leaderboard">
 				<!--li id="user-label-test" class="user-label">Test</li-->
 			</ol>
 		</div>
+		
+		<!-- Spacer -->
 		<div id="spacer1" class="spacer">
 		</div>
+		
+		<!-- Arena -->
 		<div id="arena" class="arena">
+			<!-- Time -->
 			<div class="timer-container">
 				<input id="timer" type="text" class="game-timer form-control" placeholder="0:00" autocomplete="off" disabled>
 			</div>
 			
+			<!-- Game Grid -->
 			<div id="game-grid-container" class="game-grid-container">
 				<table id="game-grid" class="game-grid">
 					<tr>
@@ -78,16 +88,23 @@
 				</table>
 			</div>
 			
+			<!-- Word -->
 			<div class="input-group wordform">
 			  <input id="word" type="text" class="form-control" placeholder="Entrez un mot" autocomplete="off">
 			  <span class="input-group-btn">
 				<input id="validate" class="btn btn-primary" type="submit" value="VALIDER">
 			  </span>
 			</div>
+			
+			<!-- Error Message -->
 			<div id="error-message" class="error-message"></div>		
 		</div>
+		
+		<!-- Spacer -->
 		<div id="spacer2" class="spacer">
 		</div>
+		
+		<!-- Scoreboard -->
 		<div id="scoreboard" class="score-board">
 			<h2>Mots Trouvés</h2>
 			<div id="wordboard" class="wordboard">
@@ -95,7 +112,6 @@
 			</div>
 		</div>
 	</div>
-	
 	
 	<script type="text/javascript" src="js/jquery.min.js"></script>
 	<script type="text/javascript" src="js/socket.io.js"></script>

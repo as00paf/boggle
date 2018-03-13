@@ -1,6 +1,10 @@
 TODO : 
 
-1. Make found words highlight on grid on hover	
+1. Make found words highlight on grid and in foudn words on hover	
+2. Calculate max grid score
+3. Fix all heights
 4. Add session handling
-5. Sort leaderboard + Show positions
-6. Manage scrollbars
+5. Sort leaderboard
+6. Manage scrollbars	
+7. Sort scored words by length and then alphabetically
+8. Show score

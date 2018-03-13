@@ -1,7 +1,6 @@
 body{
 	background-color: #ddd;
 	font-family: Arial;
-	overflow: hidden;
 }
 
 h2 {
@@ -26,17 +25,23 @@ h1 {
 }
 
 .content{
-	height: 100%;
+	height: auto;
 	margin: 16px;
 	font-size: 0;
 	display: flex;
+	flex-wrap: nowrap;
+	flex-direction: row;
 }
 
 .ranking{
 	width: 20%;
+	height: 600px;
+	vertical-align: middle;
 	background-color: white;
 	position: relative;
 	float: left;
+	overflow-y:auto;
+    margin:0 auto;
 }
 
 .leaderboard{
@@ -61,8 +66,8 @@ h1 {
 .arena{
 	background-color: white;
 	width: 50%;
+	height: 500px;
 	position: relative;
-	vertical-align: middle;
 }
 
 .game-timer{
@@ -81,11 +86,11 @@ h1 {
 }
 
 .game-grid-container{
-	display: flex;
 	justify-content: center;
 	align-items: center; 
 	width: 80%;
 	height: 100%;
+	display: flex;
 	margin: 0 auto;
 	position: relative;
 }
@@ -93,8 +98,6 @@ h1 {
 .game-grid{
 	width: 60%;
 	height: 60%;
-	margin: 0 auto;
-	position: relative;
 }
 
 .game-grid-item{
@@ -125,20 +128,23 @@ h1 {
 }
 
 .score-board{
-	width: 20%;
+	width: 20%;	
+	height: 600px;
+	vertical-align: middle;
 	background-color: white;
-	pointer-events: none;
 	position: relative;
 	float: right;
+	overflow-y: auto;
 }
 
 .wordboard {
-	height: auto;
 	padding : 10px;
-	background: cyan;
+	overflow:auto;
+	height:500px;
 }
 
 .answerboard{
+	
 }
 
 .word-label{
@@ -155,6 +161,10 @@ h1 {
 .found-word-label{
 	font-size: 14px;
 	color: #999666;
+}
+
+.found-word-label:hover {
+    background: blue;
 }
 
 .unfound-word-label{

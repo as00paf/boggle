@@ -36,6 +36,8 @@ Game.prototype = {
 	joinGame: function(socket){
 		$('#word').focus();
 		var g = this;
+		
+		//Listeners
 		$('#word').keyup( function(e){
 			var typedLetters = $('#word').val();
 			var k = e.keyCode || e.which;
@@ -145,6 +147,7 @@ Game.prototype = {
 				case "STARTED":
 					this.addLettersToGrid(serverData);
 					$("#word").prop("disabled",false);
+					$("#word").focus();
 					$("#wordboard").append('<ul id="answerboard" class="answerboard"></ul>');
 					//$('#word').focus();
 					break;
@@ -264,7 +267,8 @@ Game.prototype = {
 	onGameEnded: function(serverData){
 		//Disable text field
 		$("#word").prop("disabled",true);
-		
+		$("#word").text("");
+						
 		//Update found words with all grid possibilities
 		//console.log("All words : " + serverData.allWords.toString());
 		
@@ -272,8 +276,44 @@ Game.prototype = {
 		
 		var unfoundWords = [];
 		
-		for(var i=0;i<serverData.allWords.length;i++){
-			var word = serverData.allWords[i];
+		//Sort by length and alphabetically
+		var allWords = serverData.allWords;
+		allWords = allWords.sort();
+		
+		console.log(allWords);
+		
+		for(var i=3;i<=16;i++){	
+			var words = allWords.filter(function(word){
+				return word.length == i;
+			});
+			
+			$("#wordboard").append('<p>');
+			console.log("found " + words.length + " words of " + i + " letters");
+			
+			var g = this;
+			words.forEach(function(word, index){
+				var divClass = "found-word-label";
+				
+				if(g.foundWords.indexOf(word) == -1){
+					divClass += " unfound-unword-label";
+				}
+				
+				if(serverData.userFoundWords.indexOf(word) == -1){
+					divClass += "notfound-unword-label";
+				}
+				
+				var text = word;
+				if(index != words.length - 1){
+					text += ", ";
+				}
+				$("#wordboard").append('<span class="' + divClass + '">' + text + '</span>');
+			});
+			
+			$("#wordboard").append('<p/>');
+		}
+		
+		/*for(var i=0;i<allWords.length;i++){
+			var word = allWords[i];
 			var divClass = "found-word-label";
 			
 			if(this.foundWords.indexOf(word) == -1){
@@ -285,11 +325,11 @@ Game.prototype = {
 			}
 			
 			var text = word;
-			if(i != serverData.allWords.length - 1){
+			if(i != allWords.length - 1){
 				text += ", ";
 			}
 			$("#wordboard").append('<span class="' + divClass + '">' + text + '</span>');
-		}
+		}*/
 		
 		//this.showEndedPopup();
 	},
