@@ -10,9 +10,9 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 30;//180; //3 minutes
+var TIMER_COUNT = 15;//180; //3 minutes
 var INTERVAL = 1000; //1 second
-var RESET_TIMEOUT = 30000; //30 seconds
+var RESET_TIMEOUT = 15000; //30 seconds
 var END_TIMEOUT = 3000; //3 seconds
 
 //Static resources server
@@ -28,6 +28,7 @@ var io = require('socket.io')(server);
 function GameServer(){
 	this.gameState = "INIT";
 	this.users = [];
+	this.prevUsers = [];
 	this.letters = [];
 	this.currentTime = TIMER_COUNT;
 	this.isGameStarted = false;
@@ -119,10 +120,13 @@ GameServer.prototype = {
 		this.currentLetters = [];
 		this.userFoundWords = [];
 		this.isGameStarted = false;
+		this.prevUsers = this.users;
 		this.users.forEach( function(user){
 			user.score = 0;
 			user.foundWords = [];
 		});
+		//Clear users
+		this.users = [];
 		
 		//Send data to all users
 		this.changeGameState("RESTARTING");
@@ -142,12 +146,26 @@ GameServer.prototype = {
 	removeUser: function(userId){
 		//Remove user object
 		console.log('User with id ' + userId + ' has left the game');
+		/*var user = this.findUserById(userId);
+		if(user != null && user != undefined && this.prevUsers.indexOf(user) == -1){
+			this.prevUsers.push(user);	
+		}*/
 		this.users = this.users.filter( function(user){return user.id != userId} );
 	},
 
 	findUserById: function(userId){
 		for(var i=0;i<this.users.length;i++){			
 			var user = this.users[i];
+			if(user.id == userId){
+				return user;
+			}
+		}
+		return null;
+	},
+
+	findPrevUserById: function(userId){
+		for(var i=0;i<this.prevUsers.length;i++){			
+			var user = this.prevUsers[i];
 			if(user.id == userId){
 				return user;
 			}
@@ -272,6 +290,20 @@ io.on('connection', function(client) {
 		var newUser = new User(userId, user.name);
 		//game.addUser({ id: userId, name: user.name, score:0, foundWords: []});
 		game.addUser(newUser);
+	});
+	
+	client.on('rejoinGame', function(userId){
+		var user = game.findPrevUserById(userId);
+		var found = user != undefined;
+		console.log("User with id " + userId + " would like to join the next game, was found : " + found);
+		
+		if(found == true){
+			client.emit('addUser', { id: userId, name: user.name, isLocal: true, score: 0, foundWords: [], gameData:game.getData()});
+			client.broadcast.emit('addUser', { id: userId, name: user.name, isLocal: false, score: 0, foundWords: []} );
+
+			var newUser = new User(userId, user.name);
+			game.addUser(newUser);	
+		}
 	});
 
 	client.on('sync', function(data){

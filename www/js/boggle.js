@@ -67,7 +67,7 @@ Game.prototype = {
 
 	addUser: function(id, name, isLocal){
 		var user = new User(id, name, this.$arena, this, isLocal);
-		if(isLocal){
+		if(isLocal == true){
 			this.localUser = user;
 			this.startGame();
 		}
@@ -79,7 +79,7 @@ Game.prototype = {
 		//Remove user object
 		this.users = this.users.filter( function(u){return u.id != userId} );
 		//remove user from dom
-		$('#' + userId).remove();
+		$('#user-label-' + userId).remove();
 	},
 
 	mainLoop: function(){
@@ -145,11 +145,7 @@ Game.prototype = {
 		if(game.state != newState){
 			switch(newState){
 				case "STARTED":
-					this.addLettersToGrid(serverData);
-					$("#word").prop("disabled",false);
-					$("#word").focus();
-					$("#wordboard").append('<ul id="answerboard" class="answerboard"></ul>');
-					//$('#word').focus();
+					this.onGameStarted(serverData);
 					break;
 				case "ENDED":
 					if(game.state == undefined){
@@ -274,6 +270,30 @@ Game.prototype = {
 	},
 	
 	//States
+	onGameStarted: function(serverData){
+		console.log("Game started");
+		
+		this.addLettersToGrid(serverData);
+		$("#word").prop("disabled",false);
+		if(game.localUser != null){
+			$("#word").focus();
+		}
+		$("#wordboard").append('<ul id="answerboard" class="answerboard"></ul>');
+		
+		//Users
+		game.users.forEach(function(user){
+			$('#user-label-' + user.id).remove();
+		});
+		game.users = [];
+		if(game.localUser != null){
+			this.socket.emit('rejoinGame', game.localUser.id);
+			console.log("rejoining game");
+			console.dir(game.localUser);
+		}else{
+			console.log("Local User is null");
+		}
+	},
+	
 	onGameEnded: function(serverData){
 		console.log("Game ended");
 		
