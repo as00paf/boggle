@@ -140,7 +140,7 @@ h1 {
 .wordboard {
 	padding : 10px;
 	overflow:auto;
-	height:500px;
+	height:450px;
 }
 
 .answerboard{
@@ -160,7 +160,7 @@ h1 {
 
 .found-word-label{
 	font-size: 14px;
-	color: #999666;
+	color: purple;
 }
 
 .found-word-label:hover {
@@ -168,9 +168,26 @@ h1 {
 }
 
 .unfound-word-label{
-	color: #666666;	
+	color: red;
 }
 
 .notfound-word-label{
-	color: #333333;	
-}	
+	color: blue;	
+}
+
+.user-score-container{
+	text-align: center;
+	background: #e5e5e5;
+}
+
+.user-score{
+	display: inline-block;
+	font-size: 22px;
+	text-align: center;
+	margin-top: 4px;
+	margin-bottom: 4px;
+}
+
+.max-score{
+	font-size: 12px;
+}

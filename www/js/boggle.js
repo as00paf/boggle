@@ -152,6 +152,9 @@ Game.prototype = {
 					//$('#word').focus();
 					break;
 				case "ENDED":
+					if(game.state == undefined){
+						this.addLettersToGrid(serverData);
+					}
 					this.onGameEnded(serverData);
 					break;
 				case "RESTARTING":
@@ -176,13 +179,17 @@ Game.prototype = {
 	},
 	
 	updateScores: function(serverData){
-		if(this.currentTime % 5 == 0) return;
+		if(/*game.currentTime % 5 == 0 || */game.currentTime == 0 || game.state != "STARTED") return;
+		
 		//Update scores
 		serverData.users.forEach( function(serverUser){
 			//Update local user stats
 			if(game.localUser !== undefined && serverUser.id == game.localUser.id){
 				game.localUser.score = serverUser.score;
 				game.localUser.refresh();
+				
+				//Update user score
+				$("#user-score").html(game.localUser.score + " Points");
 			}
 
 			//Update foreign users
@@ -195,6 +202,7 @@ Game.prototype = {
 					found = true;
 				}
 			});
+			
 			if(!found &&
 				(game.localUser == undefined || serverUser.id != game.localUser.id)){
 				//I need to create it
@@ -254,20 +262,25 @@ Game.prototype = {
 			divClass += " wrong-word-label";
 			suffix = ' (' + reason +')';
 			$('#error-message').text(reason);
+			game.localUser.score += points;
 		}else{
 			if(this.foundWords.indexOf(word) == -1){
 				this.foundWords.push(word);
 			}
 		}
-		$("#answerboard").append('<li><div class="' + divClass + '">' + word + suffix + '</div></li>');
+		$("#answerboard").prepend('<li><div class="' + divClass + '">' + word + suffix + '</div></li>');
+		
 		this.triedWords.push(word);
 	},
 	
 	//States
 	onGameEnded: function(serverData){
-		//Disable text field
+		console.log("Game ended");
+		
+		//Disable text field & reset text field and grid highlight
 		$("#word").prop("disabled",true);
 		$("#word").text("");
+		highlightLetters("");
 						
 		//Update found words with all grid possibilities
 		//console.log("All words : " + serverData.allWords.toString());
@@ -279,8 +292,11 @@ Game.prototype = {
 		//Sort by length and alphabetically
 		var allWords = serverData.allWords;
 		allWords = allWords.sort();
+		var g = this;
 		
-		console.log(allWords);
+		//console.log("User found " + g.foundWords.length + " words");
+		//console.log(g.foundWords);
+		//console.log(allWords[0]);
 		
 		for(var i=3;i<=16;i++){	
 			var words = allWords.filter(function(word){
@@ -288,18 +304,18 @@ Game.prototype = {
 			});
 			
 			$("#wordboard").append('<p>');
-			console.log("found " + words.length + " words of " + i + " letters");
 			
-			var g = this;
 			words.forEach(function(word, index){
 				var divClass = "found-word-label";
 				
 				if(g.foundWords.indexOf(word) == -1){
-					divClass += " unfound-unword-label";
+					//console.log("unfound");
+					divClass += " unfound-word-label";
 				}
 				
 				if(serverData.userFoundWords.indexOf(word) == -1){
-					divClass += "notfound-unword-label";
+					//console.log("not found");
+					divClass += " notfound-word-label";
 				}
 				
 				var text = word;
@@ -312,26 +328,48 @@ Game.prototype = {
 			$("#wordboard").append('<p/>');
 		}
 		
-		/*for(var i=0;i<allWords.length;i++){
-			var word = allWords[i];
-			var divClass = "found-word-label";
-			
-			if(this.foundWords.indexOf(word) == -1){
-				divClass += " unfound-unword-label";
+		//Update game users with server data
+		serverData.users.forEach(function(serverUser){
+			var gameUser = game.findUserById(serverUser.id);
+			if(gameUser != null){
+				gameUser.score = serverUser.score;
+				gameUser.foundWords = serverUser.foundWords;
 			}
-			
-			if(serverData.userFoundWords.indexOf(word) == -1){
-				divClass += "notfound-unword-label";
-			}
-			
-			var text = word;
-			if(i != allWords.length - 1){
-				text += ", ";
-			}
-			$("#wordboard").append('<span class="' + divClass + '">' + text + '</span>');
-		}*/
+		});
 		
-		//this.showEndedPopup();
+		//onHover
+		$('.found-word-label').hover( function(){
+		  //$(this).css('background-color', '#F00');
+		  var word = $(this).text().substring(0, $(this).text().length - 2);
+		  //console.log("hover : " + word);
+		  highlightLetters(word);
+		  
+		  game.users.forEach(function(user){
+			  //console.log("User " + user.name + " found " + user.foundWords.length);
+			  if(user.foundWords.indexOf(word) > -1){
+				  var userLabelId = "#user-label-" + user.id;
+				  $(userLabelId).css('background-color', '#F00');
+			  }
+		  });
+		},
+		function(){
+		  //Un-highlight letters
+		  highlightLetters("");
+		  
+		  //Un-highlight users
+		  game.users.forEach(function(user){
+			  var userLabelId = "#user-label-" + user.id;
+			  $(userLabelId).css('background-color', '#FFF');
+		  });
+		});
+		
+		//Show max score
+		var score = 0;
+		if(game.localUser != null){
+			score = game.localUser.score;
+		}
+	
+		$("#user-score").html(score + ' Points <span class= "max-score">(max ' + serverData.maxScore + ' pts)</span>');
 	},
 	
 	onGameRestarting: function(serverData){
@@ -350,6 +388,7 @@ function User(id, name, $arena, game, isLocal){
 	this.id = id;
 	this.name= name;
 	this.score = 0;
+	this.foundWords = [];
 	this.$arena = $arena;
 	this.game = game;
 	this.isLocal = isLocal;
@@ -384,7 +423,7 @@ User.prototype = {
 	},
 	
 	toString: function(){
-		return "[User] " + this.id + " " + this.name + " score : " + this.score + " isLocal : " + this.isLocal;
+		return "[User] " + this.id + " " + this.name + " score : " + this.score + " isLocal : " + this.isLocal + " foundWords : " + this.foundWords;
 	}
 }
 

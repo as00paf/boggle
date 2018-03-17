@@ -1,10 +1,15 @@
 TODO : 
 
-1. Make found words highlight on grid and in foudn words on hover	
-2. Calculate max grid score
-3. Fix all heights
-4. Add session handling
-5. Sort leaderboard
-6. Manage scrollbars	
-7. Sort scored words by length and then alphabetically
-8. Show score
+Prog
+1. Join users on new game and kick all of them out on restarting
+2. Add session handling
+3. Sort leaderboard
+4. Clean logs
+
+UI
+1. Fix all heights
+2. Add Bootstrap
+
+General
+1. Get domain
+2. Get Social Accounts

@@ -10,9 +10,9 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 15;//180; //3 minutes
+var TIMER_COUNT = 30;//180; //3 minutes
 var INTERVAL = 1000; //1 second
-var RESET_TIMEOUT = 60000; //60 seconds
+var RESET_TIMEOUT = 30000; //30 seconds
 var END_TIMEOUT = 3000; //3 seconds
 
 //Static resources server
@@ -35,6 +35,7 @@ function GameServer(){
 	this.solver = BoggleSolver(new Dictionnary().words);//TODO : Separate french and english
 	this.currentWords = [];
 	this.userFoundWords = [];
+	this.currentMaxScore = 0;
 	
 	console.log('Game Server Initiated\n');
 }
@@ -59,6 +60,8 @@ GameServer.prototype = {
 			}
 			
 			g.currentWords = result;
+			g.currentMaxScore = g.calculateMaxScore(result.list);
+			console.log("Max score for current game : " + g.currentMaxScore);
 		
 			//Start Game
 			console.log('Starting Game');		
@@ -118,6 +121,7 @@ GameServer.prototype = {
 		this.isGameStarted = false;
 		this.users.forEach( function(user){
 			user.score = 0;
+			user.foundWords = [];
 		});
 		
 		//Send data to all users
@@ -150,7 +154,18 @@ GameServer.prototype = {
 		}
 		return null;
 	},
+
+	findUserIndexById: function(userId){
+		for(var i=0;i<this.users.length;i++){			
+			var user = this.users[i];
+			if(user.id == userId){
+				return i;
+			}
+		}
+		return null;
+	},
 	
+	//TODO: Check if still relevant
 	//Sync user with new data received from a client
 	syncUser: function(newUserData){
 		this.users.forEach( function(user){
@@ -172,6 +187,7 @@ GameServer.prototype = {
 		if(this.gameState == "ENDED"){
 			gameData.allWords = this.currentWords.list;
 			gameData.userFoundWords = this.userFoundWords;
+			gameData.maxScore = this.currentMaxScore;
 		}
 
 		return gameData;
@@ -180,6 +196,7 @@ GameServer.prototype = {
 	validateWord: function (client, userId, word){
 		//console.log("Validating word "  + word + " with " + game.possibleWords.length + " possibilities");
 		var user = this.findUserById(userId);
+		var userIndex = this.findUserIndexById(userId);
 		if(user == null){
 			console.log("User not found with id " + clientId);
 			return null;
@@ -193,6 +210,8 @@ GameServer.prototype = {
 			user.score += points;
 			if(this.userFoundWords.indexOf(word) == -1){
 				this.userFoundWords.push(word);
+				user.foundWords.push(word);
+				this.users[userIndex] = user;//Update user
 			}
 		}else{
 			reason = "Not in dictionnary";
@@ -219,6 +238,15 @@ GameServer.prototype = {
 		}
 		
 		return points
+	},
+	
+	calculateMaxScore: function(words){
+		var onePoints = words.filter(function(word){return word.length <= 4}).length;
+		var threePoints = words.filter(function(word){return (word.length > 4 && word.length < 7)}).length * 3;
+		var fivePoints = words.filter(function(word){return (word.length > 6 && word.length < 11)}).length * 5;
+		var elevenPoints = words.filter(function(word){return word.length >= 8}).length * 11;
+		
+		return onePoints + threePoints + fivePoints + elevenPoints;
 	}
 }
 
@@ -238,10 +266,12 @@ io.on('connection', function(client) {
 	client.on('joinGame', function(user){
 		var userId = guid();
 
-		client.emit('addUser', { id: userId, name: user.name, isLocal: true, score: 0, gameData:game.getData()});
-		client.broadcast.emit('addUser', { id: userId, name: user.name, isLocal: false, score: 0} );
+		client.emit('addUser', { id: userId, name: user.name, isLocal: true, score: 0, foundWords: [], gameData:game.getData()});
+		client.broadcast.emit('addUser', { id: userId, name: user.name, isLocal: false, score: 0, foundWords: []} );
 
-		game.addUser({ id: userId, name: user.name, score:0});
+		var newUser = new User(userId, user.name);
+		//game.addUser({ id: userId, name: user.name, score:0, foundWords: []});
+		game.addUser(newUser);
 	});
 
 	client.on('sync', function(data){
@@ -305,6 +335,20 @@ function shuffle(array) {
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
+};
+
+//User
+function User(id, name){
+	this.id = id;
+	this.name= name;
+	this.score = 0;
+	this.foundWords = [];
+}
+
+User.prototype = {
+	toString: function(){
+		return "[User] " + this.id + " " + this.name + " score : " + this.score;
+	}
 };
 
 var game = new GameServer();
