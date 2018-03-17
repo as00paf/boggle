@@ -35,8 +35,25 @@ Game.prototype = {
 
 	joinGame: function(socket){
 		$('#word').focus();
-		var g = this;
+		this.startListening();
+	},
+
+	addUser: function(id, name, isLocal){
+		var user = new User(id, name, this.$arena, this, isLocal);
+		if(isLocal == true){
+			this.localUser = user;
+			$('#prompt').hide();
+			this.startListening();
+			
+			this.startGame();
+			sessionStorage.setItem('userId', id);
+		}
 		
+		this.users.push(user);
+	},
+	
+	startListening: function(){
+		var g = this;
 		//Listeners
 		$('#word').keyup( function(e){
 			var typedLetters = $('#word').val();
@@ -63,16 +80,6 @@ Game.prototype = {
 				//highlightLetters(typedLetters);
 			}			
 		});
-	},
-
-	addUser: function(id, name, isLocal){
-		var user = new User(id, name, this.$arena, this, isLocal);
-		if(isLocal == true){
-			this.localUser = user;
-			this.startGame();
-		}
-		
-		this.users.push(user);
 	},
 
 	removeUser: function(userId){
@@ -288,7 +295,7 @@ Game.prototype = {
 		if(game.localUser != null){
 			this.socket.emit('rejoinGame', game.localUser.id);
 			console.log("rejoining game");
-			console.dir(game.localUser);
+			//console.dir(game.localUser);
 		}else{
 			console.log("Local User is null");
 		}
@@ -424,7 +431,7 @@ User.prototype = {
 		var divClass = "user-label";
 		if(this.isLocal == true){
 			divClass += " local-user-label";
-			console.log("isLocal " + this.name);
+			//console.log("isLocal " + this.name);
 		}
 		$('#leaderboard').append('<li id="user-label-' + this.id +'" class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</li>');
 		this.game.refreshUI();
@@ -488,6 +495,7 @@ function getNeighboursForItemAt	(letters, index){
 
 
 function validateWord(word, socket){
+	if(word == null || word == undefined || word == "") return;
 	//Reset error message
 	$('#error-message').text("");
 	

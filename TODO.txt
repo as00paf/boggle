@@ -1,9 +1,8 @@
 TODO : 
 
 Prog
-1. Add session handling
-2. Sort leaderboard
-3. Clean logs
+1. Sort leaderboard
+2. Clean logs
 
 UI
 1. Fix all heights

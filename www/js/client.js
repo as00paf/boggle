@@ -39,6 +39,13 @@ $(document).ready( function(){
 
 	$('#user-name').focus()
 
+	//User
+    var userId = sessionStorage.getItem('userId');
+    if(userId != undefined){
+        console.log("Found userId : " + userId);
+		socket.emit('rejoinGame', userId);
+    }
+	
 	$('#join').click( function(){
 		userName = $('#user-name').val();
 		joinGame(userName, socket);
