@@ -1,6 +1,14 @@
 TODO : 
 
 Prog
+1. Highlight ALL users when hovering found word
+2. Remove users at the same time that Im removing found words
+
+2. Add leaders of 5 last games
+3. Update prompt to include login and register
+4. Add popup with stats when hovering user in leaderboard
+5. Add popup with stats when hovering found word
+
 1. Sort leaderboard
 2. Clean logs
 
