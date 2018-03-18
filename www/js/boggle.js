@@ -280,21 +280,20 @@ Game.prototype = {
 	onGameStarted: function(serverData){
 		console.log("Game started");
 		
+		//Add letters to grid
 		this.addLettersToGrid(serverData);
+		
+		//Focus on #word
+		$("#word").text("");
 		$("#word").prop("disabled",false);
 		if(game.localUser != null){
 			$("#word").focus();
 		}
-		$("#wordboard").append('<ul id="answerboard" class="answerboard"></ul>');
 		
-		//Users
-		game.users.forEach(function(user){
-			$('#user-label-' + user.id).remove();
-		});
-		game.users = [];
+		//Rejoin game
 		if(game.localUser != null){
 			this.socket.emit('rejoinGame', game.localUser.id);
-			console.log("rejoining game");
+			//console.log("rejoining game");
 			//console.dir(game.localUser);
 		}else{
 			console.log("Local User is null");
@@ -305,10 +304,11 @@ Game.prototype = {
 		console.log("Game ended");
 		
 		//Disable text field & reset text field and grid highlight
+		$("#word").text("");
 		$("#word").prop("disabled",true);
 		$("#word").text("");
 		highlightLetters("");
-						
+		
 		//Update found words with all grid possibilities
 		//console.log("All words : " + serverData.allWords.toString());
 		
@@ -364,15 +364,13 @@ Game.prototype = {
 			}
 		});
 		
+		//TODO : Move?
 		//onHover
 		$('.found-word-label').hover( function(){
-		  //$(this).css('background-color', '#F00');
 		  var word = $(this).text().substring(0, $(this).text().length - 2);
-		  //console.log("hover : " + word);
 		  highlightLetters(word);
 		  
 		  game.users.forEach(function(user){
-			  //console.log("User " + user.name + " found " + user.foundWords.length);
 			  if(user.foundWords.indexOf(word) > -1){
 				  var userLabelId = "#user-label-" + user.id;
 				  $(userLabelId).css('background-color', '#F00');
@@ -400,6 +398,7 @@ Game.prototype = {
 	},
 	
 	onGameRestarting: function(serverData){
+		console.log("Game restarting");
 		//Clear Wordboard
 		$("#wordboard").html("");
 		
@@ -407,7 +406,11 @@ Game.prototype = {
 		this.triedWords = [];
 		this.foundWords = [];
 		
-		//this.showWaitPopup();
+		$("#wordboard").append('<ul id="answerboard" class="answerboard"></ul>');
+		game.users.forEach(function(user){
+			$('#user-label-' + user.id).remove();
+		});
+		game.users = [];
 	}
 }
 
@@ -426,7 +429,7 @@ function User(id, name, $arena, game, isLocal){
 User.prototype = {
 
 	materialize: function(){
-		debug("Adding user to list : " + this.name);
+		//debug("Adding user to list : " + this.name);
 		
 		var divClass = "user-label";
 		if(this.isLocal == true){

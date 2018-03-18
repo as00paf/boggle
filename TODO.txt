@@ -1,8 +1,10 @@
 TODO : 
 
 Prog
-1. Highlight ALL users when hovering found word
-2. Remove users at the same time that Im removing found words
+3. Keep score when reloading
+4. Make sure leaderboard and scoreboard use the same value
+5. Make sure to clear #word twice
+1. Fix bug that sometimes words dont highlight completely on hovering found words
 
 2. Add leaders of 5 last games
 3. Update prompt to include login and register

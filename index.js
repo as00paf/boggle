@@ -12,7 +12,7 @@ var HEIGHT = 580;
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
 var TIMER_COUNT = 15;//180; //3 minutes
 var INTERVAL = 1000; //1 second
-var RESET_TIMEOUT = 15000; //30 seconds
+var RESET_TIMEOUT = 30000; //30 seconds
 var END_TIMEOUT = 3000; //3 seconds
 
 //Static resources server
@@ -226,11 +226,11 @@ GameServer.prototype = {
 		if(validated == true){
 			points = this.calculatePoints(word);
 			user.score += points;
+			user.foundWords.push(word);
 			if(this.userFoundWords.indexOf(word) == -1){
 				this.userFoundWords.push(word);
-				user.foundWords.push(word);
-				this.users[userIndex] = user;//Update user
 			}
+			this.users[userIndex] = user;//Update user
 		}else{
 			reason = "Not in dictionnary";
 		}

@@ -42,7 +42,7 @@ $(document).ready( function(){
 	//User
     var userId = sessionStorage.getItem('userId');
     if(userId != undefined){
-        console.log("Found userId : " + userId);
+        //console.log("Found userId : " + userId);
 		socket.emit('rejoinGame', userId);
     }
 	
