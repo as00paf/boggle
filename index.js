@@ -10,9 +10,9 @@ var WIDTH = 640;
 var HEIGHT = 580;
 
 var BOGGLE_DICE = ["LENUYG", "ELUPST", "ZDVNEA", "SDTNOE", "AMORIS", "FXRAOI", "MOQABJ", "FSHEEI", "HRSNEI", "ETNKOU", "TARILB", "TIEAOA", "ACEPDM", "RLASEC", "ULIWER", "VGTNIE"];
-var TIMER_COUNT = 30;//180; //3 minutes
+var TIMER_COUNT = 180; //3 minutes
 var INTERVAL = 1000; //1 second
-var RESET_TIMEOUT = 15000; //30 seconds
+var RESET_TIMEOUT = 30000; //30 seconds
 var END_TIMEOUT = 3000; //3 seconds
 
 //Static resources server
