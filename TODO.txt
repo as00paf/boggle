@@ -1,10 +1,12 @@
 TODO : 
 
 Prog
-3. Keep score when reloading
-4. Make sure leaderboard and scoreboard use the same value
-5. Make sure to clear #word twice
-1. Fix bug that sometimes words dont highlight completely on hovering found words
+1. Refactor index.js to use server instead of game as var
+2. Always show all users
+3. Make sure leaderboard and scoreboard use the same value
+4. Make sure to clear #word (bug)
+5. Fix bug that sometimes words dont highlight completely on hovering found words
+6. Change all colors with css classes
 
 2. Add leaders of 5 last games
 3. Update prompt to include login and register

@@ -21,6 +21,7 @@ function Game(arenaId, w, h, socket){
 
 Game.prototype = {
 	startGame: function(){		
+		this.startListening();
 		var g = this;
 		
 		this.currentLoop = setInterval(function(){
@@ -42,14 +43,17 @@ Game.prototype = {
 		var user = new User(id, name, this.$arena, this, isLocal);
 		if(isLocal == true){
 			this.localUser = user;
-			$('#prompt').hide();
-			this.startListening();
-			
-			this.startGame();
-			sessionStorage.setItem('userId', id);
+		}else{
+			this.users.push(user);
 		}
-		
-		this.users.push(user);
+		user.materialize();
+	},
+	
+	addLocalUser: function(data){
+		console.log("AddLocalUser");
+		console.dir(data);
+		this.localUser = new User(data.id, data.name, this.$arena, this, true);
+		this.localUser.materialize();
 	},
 	
 	startListening: function(){
@@ -182,9 +186,10 @@ Game.prototype = {
 	},
 	
 	updateScores: function(serverData){
-		if(/*game.currentTime % 5 == 0 || */game.currentTime == 0 || game.state != "STARTED") return;
+		if(this.currentTime == 0 || this.state != "STARTED") return;
 		
 		//Update scores
+		var game = this;
 		serverData.users.forEach( function(serverUser){
 			//Update local user stats
 			if(game.localUser !== undefined && serverUser.id == game.localUser.id){
@@ -248,8 +253,8 @@ Game.prototype = {
 	},
 	
 	findUserById: function(userId){
-		for(var i=0;i<game.users.length;i++){			
-			var user = game.users[i];
+		for(var i=0;i<this.users.length;i++){			
+			var user = this.users[i];
 			if(user.id == userId){
 				return user;
 			}
@@ -265,7 +270,7 @@ Game.prototype = {
 			divClass += " wrong-word-label";
 			suffix = ' (' + reason +')';
 			$('#error-message').text(reason);
-			game.localUser.score += points;
+			this.localUser.score += points;
 		}else{
 			if(this.foundWords.indexOf(word) == -1){
 				this.foundWords.push(word);
@@ -283,18 +288,17 @@ Game.prototype = {
 		//Add letters to grid
 		this.addLettersToGrid(serverData);
 		
-		//Focus on #word
-		$("#word").text("");
-		$("#word").prop("disabled",false);
-		if(game.localUser != null){
-			$("#word").focus();
-		}
+		//Add users to leaderboard
+		console.log("Adding all users : " + this.users.length);
+		game.users.forEach(function(user){
+			user.materialize();
+		});
 		
-		//Rejoin game
-		if(game.localUser != null){
-			this.socket.emit('rejoinGame', game.localUser.id);
-			//console.log("rejoining game");
-			//console.dir(game.localUser);
+		if(this.localUser != null){			
+			//Focus on #word
+			$("#word").text("");
+			$("#word").prop("disabled",false);
+			$("#word").focus();
 		}else{
 			console.log("Local User is null");
 		}
@@ -305,6 +309,7 @@ Game.prototype = {
 		
 		//Disable text field & reset text field and grid highlight
 		$("#word").text("");
+		$("#word").val("");
 		$("#word").prop("disabled",true);
 		$("#word").text("");
 		highlightLetters("");
@@ -422,12 +427,9 @@ function User(id, name, $arena, game, isLocal){
 	this.$arena = $arena;
 	this.game = game;
 	this.isLocal = isLocal;
-
-	this.materialize();
 }
 
 User.prototype = {
-
 	materialize: function(){
 		//debug("Adding user to list : " + this.name);
 		
@@ -436,8 +438,11 @@ User.prototype = {
 			divClass += " local-user-label";
 			//console.log("isLocal " + this.name);
 		}
-		$('#leaderboard').append('<li id="user-label-' + this.id +'" class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</li>');
-		this.game.refreshUI();
+		
+		//if(this.game.state == "STARTED"){
+			$('#leaderboard').append('<li id="user-label-' + this.id +'" class="' + divClass + '">' + this.name + ' (' + this.score +' pts)</li>');
+			this.game.refreshUI();
+		//}
 	},
 
 	refresh: function(){

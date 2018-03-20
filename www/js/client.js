@@ -13,9 +13,12 @@ var ERROR_MESSAGE_NOT_ON_GRID = "Une des lettres que vous avez tapé n'est pas s
 var ERROR_MESSAGE_RULE = "Les lettres doivent être adjacentes et utilisées qu'une seule fois par mots"
 
 socket.on('addUser', function(user){
+	console.log("Adding user " + user.name + " isLocal " + user.isLocal);
 	game.addUser(user.id, user.name, user.isLocal);
 	if(user.isLocal == true){
+		$('#prompt').hide();
 		userId = user.id;
+		sessionStorage.setItem('userId', user.id);
 	}
 });
 
@@ -33,6 +36,19 @@ socket.on('wordValidated', function(data){
 	game.wordValidated(data.word, data.validated, data.points, data.reason);
 });
 
+socket.on('rejoinGame', function(data){
+	/*console.log("rejoinGame : " + data.userFound);
+	console.dir(data);
+	if(data.userFound == true){		
+		game.addLocalUser(data.user);
+		$('#prompt').hide();
+		//this.startListening();
+		//this.startGame();
+	}else{
+		console.log("User was not found");
+	}*/
+});
+
 $(document).ready( function(){
 	var width = $(document).width() / 2
 	var height = $(document).height() * 0.65
@@ -42,8 +58,8 @@ $(document).ready( function(){
 	//User
     var userId = sessionStorage.getItem('userId');
     if(userId != undefined){
-        //console.log("Found userId : " + userId);
-		socket.emit('rejoinGame', userId);
+        console.log("Found saved userId : " + userId);
+		socket.emit('joinGameById', userId);
     }
 	
 	$('#join').click( function(){
