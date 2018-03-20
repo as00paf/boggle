@@ -57,6 +57,10 @@ h1 {
 	font-weight: bold;
 }
 
+.highlighted-user-label{
+	background-color: red;
+}
+
 .spacer{
     display: inline-block;
 	width:5%;
@@ -107,6 +111,17 @@ h1 {
 	font-weight: bold;
 	border: 4px solid #eee;
 	padding: 8px;
+	background-color: white;
+}
+
+.game-grid-item-highlighted{
+	color: #ccc;
+	font-size: 48px;
+	text-align: center;
+	font-weight: bold;
+	border: 4px solid #eee;
+	padding: 8px;
+	background-color: blue;
 }
 
 .wordform{

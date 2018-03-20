@@ -43,6 +43,8 @@ Game.prototype = {
 		var user = new User(id, name, this.$arena, this, isLocal);
 		if(isLocal == true){
 			this.localUser = user;
+			this.startGame();
+			this.startListening();
 		}else{
 			this.users.push(user);
 		}
@@ -119,9 +121,9 @@ Game.prototype = {
 			var itemId = "#grid-item-" + (i + 1);
 			var letter = this.currentLetters[i];
 			if(usedLetters.indexOf(letter) > -1){
-				$(itemId).css("background-color", "blue");
+				$(itemId).attr('class', 'game-grid-item-highlighted');
 			}else{
-				$(itemId).css("background-color", "#white");
+				$(itemId).attr('class', 'game-grid-item');
 			}
 		}
 	},
@@ -378,9 +380,14 @@ Game.prototype = {
 		  game.users.forEach(function(user){
 			  if(user.foundWords.indexOf(word) > -1){
 				  var userLabelId = "#user-label-" + user.id;
-				  $(userLabelId).css('background-color', '#F00');
+				  $(userLabelId).addClass('highlighted-user-label');
 			  }
 		  });
+		  
+		  if(game.foundWords.indexOf(word) > -1){
+			  var userLabelId = "#user-label-" + game.localUser.id;
+			  $(userLabelId).addClass('highlighted-user-label');
+		  }	
 		},
 		function(){
 		  //Un-highlight letters
@@ -389,8 +396,9 @@ Game.prototype = {
 		  //Un-highlight users
 		  game.users.forEach(function(user){
 			  var userLabelId = "#user-label-" + user.id;
-			  $(userLabelId).css('background-color', '#FFF');
+			  $(userLabelId).removeClass('highlighted-user-label');
 		  });
+		  $("#user-label-" + game.localUser.id).removeClass('highlighted-user-label');
 		});
 		
 		//Show max score
